@@ -1,8 +1,11 @@
 import sys
+from idlelib.undo import InsertCommand
 
 from PyQt6.QtGui import QAction
 from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QGridLayout, QLabel, QLineEdit, QPushButton, QComboBox, \
-	QMainWindow
+	QMainWindow, QTableWidget, QTableWidgetItem, QDialog
+import sqlite3
+
 
 
 class MainWindow(QMainWindow):
@@ -14,12 +17,61 @@ class MainWindow(QMainWindow):
 		help_menu_item = self.menuBar().addMenu('&Help')
 
 		add_student_action= QAction('&Add Student', self)
+		add_student_action.triggered.connect(self.insert)
+		add_student_action.setShortcut('Ctrl+A')
 		file_menu_item.addAction(add_student_action)
 
 		about_action = QAction("About", self)
 		help_menu_item.addAction(about_action)
 
+
+		self.table = QTableWidget(self)
+		self.table.setColumnCount(4)
+		self.table.setHorizontalHeaderLabels(("Id", "Name","Course","Mobile"))
+		self.table.verticalHeader().setVisible(False)
+		self.setCentralWidget(self.table)
+
+
+	def load_data(self):
+		connection = sqlite3.connect("database.db")
+		res = connection.execute("SELECT * FROM students")
+		self.table.setRowCount(0)
+		for row_number, row_data in enumerate(res):
+			self.table.insertRow(row_number)
+			for column_number, data in enumerate(row_data):
+				self.table.setItem(row_number, column_number, QTableWidgetItem(str(data)))
+		connection.close()
+
+	def insert(self):
+		dialog = InsertDialog()
+		dialog.exec()
+
+class InsertDialog(QDialog):
+	def __init__(self):
+		super().__init__()
+		self.setWindowTitle('Insert Student Data')
+		self.setFixedWidth(300)
+		self.setFixedHeight(300)
+
+		layout = QVBoxLayout()
+
+		# Add student name widget
+		student_name = QLineEdit()
+		student_name.setPlaceholderText("Student Name")
+		layout.addWidget(student_name)
+
+
+		# Add courses combo box
+		course_name = QComboBox()
+		courses = ["Biology","Math","Physics","Astronomy",]
+		course_name.addItems(courses)
+		layout.addWidget(course_name)
+
+		self.setLayout(layout)
+
+
 app = QApplication(sys.argv)
 calculator = MainWindow()
 calculator.show()
+calculator.load_data()
 sys.exit(app.exec())
