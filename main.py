@@ -44,13 +44,29 @@ class MainWindow(QMainWindow):
 		toolbar.addAction(search_action)
 
 		# Create status bar and add elements
-		statusbar = QStatusBar()
-		self.setStatusBar(statusbar)
+		self.statusbar = QStatusBar()
+		self.setStatusBar(self.statusbar)
 
-		hello = QLabel("Hello there")
-		statusbar.addWidget(hello)
+		# Detect a cell click
+		self.table.cellClicked.connect(self.cell_clicked)
 
+	def cell_clicked(self):
+		edit_button = QPushButton("Edit Records")
+		edit_button.clicked.connect(self.edit)
 
+		delete_button = QPushButton("Delete Records")
+		delete_button.clicked.connect(self.delete)
+
+		children = self.findChildren(QPushButton)
+		if children:
+			for child in children:
+				self.statusbar.removeWidget(child)
+
+		self.statusbar.addWidget(edit_button)
+		self.statusbar.addWidget(delete_button)
+
+		# hello = QLabel("Hello there")
+		# statusbar.addWidget(hello)
 	def load_data(self):
 		connection = sqlite3.connect("database.db")
 		res = connection.execute("SELECT * FROM students")
@@ -68,6 +84,20 @@ class MainWindow(QMainWindow):
 	def search(self):
 		dialog = SearchDialog()
 		dialog.exec()
+
+	def edit(self):
+		dialog = EditDialog()
+		dialog.exec()
+
+	def delete(self):
+		dialog = DeleteDialog()
+		dialog.exec()
+
+class EditDialog(QDialog):
+	pass
+
+class DeleteDialog(QDialog):
+	pass
 
 class InsertDialog(QDialog):
 	def __init__(self):
